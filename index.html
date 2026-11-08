@@ -157,24 +157,27 @@ footer{padding:36px 0;text-align:center;color:var(--mut);font-size:.9rem;border-
 <button role="tab" aria-selected="true" data-t="once">One-time pickup</button>
 <button role="tab" aria-selected="false" data-t="season">Seasonal plan</button>
 </div>
-<form id="f" novalidate>
+<form id="f" name="booking" method="POST" data-netlify="true" netlify-honeypot="bot-field" novalidate><input type="hidden" name="form-name" value="booking"><input type="hidden" name="booking-type" id="bt" value="One-time pickup"><p style="display:none"><label>Leave empty: <input name="bot-field"></label></p>
 <div class="row">
-<div class="f"><label for="n">Full name</label><input id="n" required autocomplete="name"><div class="err">Enter your name.</div></div>
-<div class="f"><label for="p">Phone</label><input id="p" type="tel" required autocomplete="tel"><div class="err">Enter a phone number.</div></div>
+<div class="f"><label for="n">Full name</label><input id="n" name="name" required autocomplete="name"><div class="err">Enter your name.</div></div>
+<div class="f"><label for="p">Phone</label><input id="p" name="phone" type="tel" required autocomplete="tel"><div class="err">Enter a phone number.</div></div>
 </div>
-<div class="f"><label for="a">Address to shovel</label><input id="a" required autocomplete="street-address"><div class="err">Enter the address.</div></div>
+<div class="f"><label for="a">Address to shovel</label><input id="a" name="address" required autocomplete="street-address"><div class="err">Enter the address.</div></div>
 <div class="row">
-<div class="f"><label for="s">Service</label><select id="s"><option>Driveway</option><option>Sidewalk &amp; walkway</option><option>Steps &amp; porch</option><option>Driveway + walkway + steps</option><option>Salting / de-icing only</option></select></div>
-<div class="f" id="dw"><label for="d">Preferred date</label><input id="d" type="date"></div>
-<div class="f" id="sw" style="display:none"><label for="v">Visits</label><select id="v"><option>Every snowfall</option><option>Snowfalls over 2 inches</option><option>Snowfalls over 4 inches</option></select></div>
+<div class="f"><label for="s">Service</label><select id="s" name="service"><option>Driveway</option><option>Sidewalk &amp; walkway</option><option>Steps &amp; porch</option><option>Driveway + walkway + steps</option><option>Salting / de-icing only</option></select></div>
+<div class="f" id="dw"><label for="d">Preferred date</label><input id="d" name="date" type="date"></div>
+<div class="f" id="sw" style="display:none"><label for="v">Visits</label><select id="v" name="visits"><option>Every snowfall</option><option>Snowfalls over 2 inches</option><option>Snowfalls over 4 inches</option></select></div>
 </div>
-<div class="f"><label for="m">Notes (optional)</label><textarea id="m" rows="3" placeholder="Gate codes, pets, where to put the snow…"></textarea></div>
+<div class="f"><label for="m">Notes (optional)</label><textarea id="m" name="notes" rows="3" placeholder="Gate codes, pets, where to put the snow…"></textarea></div>
 <button class="btn" type="submit" style="width:100%">Request booking</button>
 </form>
+<button type="button" id="adm" aria-label="Staff login" style="display:block;width:100%;height:80px;margin:0;padding:0;background:none;border:0;opacity:0;cursor:default;-webkit-tap-highlight-color:transparent;touch-action:manipulation"></button>
 <div class="ok" id="ok" role="status"><div class="chk">✓</div><h3 style="margin:0 0 6px">Request received</h3><p style="color:var(--mut);margin:0">We’ll call you to confirm. Need it sooner? Call <a href="tel:4129531428"><b>412-953-1428</b></a>.</p></div>
 </div>
 </div></section>
 
+<style>.bk{border-top:1px solid var(--line);padding:12px 0;font-size:.92rem;color:var(--mut)}.bk b{display:block;color:var(--ink)}</style>
+<div id="md" role="dialog" aria-modal="true" style="display:none;position:fixed;inset:0;z-index:50;background:rgba(8,20,43,.6);align-items:center;justify-content:center;padding:20px"><div class="card" style="width:100%;max-width:520px;max-height:85vh;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">Bookings</h3><button id="x" type="button" aria-label="Close" style="border:0;background:none;color:var(--ink);font-size:1.6rem;cursor:pointer">×</button></div><div style="display:flex;gap:8px"><input id="pw" type="password" inputmode="numeric" placeholder="Password" autocomplete="off" style="flex:1"><button class="btn" id="go" type="button">Open</button></div><p id="pm" style="color:var(--mut);font-size:.9rem"></p><div id="out"></div></div></div>
 <footer><div class="wrap">Snow shoveling pickup · Call <a href="tel:4129531428">412-953-1428</a></div></footer>
 
 <script>
@@ -189,12 +192,18 @@ document.querySelectorAll('.grid,.steps').forEach(function(g){Array.prototype.fo
 document.querySelector('.formbox').classList.add('z');
 document.querySelectorAll('.rv').forEach(function(el){io.observe(el)});
 var tabs=document.querySelectorAll('.tabs button'),type='once';
-tabs.forEach(function(b){b.onclick=function(){type=b.dataset.t;tabs.forEach(function(t){t.setAttribute('aria-selected',t===b)});
+tabs.forEach(function(b){b.onclick=function(){type=b.dataset.t;document.getElementById('bt').value=type==='once'?'One-time pickup':'Seasonal plan';tabs.forEach(function(t){t.setAttribute('aria-selected',t===b)});
 document.getElementById('dw').style.display=type==='once'?'':'none';document.getElementById('sw').style.display=type==='season'?'':'none'}});
 var f=document.getElementById('f');
 f.addEventListener('submit',function(e){e.preventDefault();var bad=false;
 f.querySelectorAll('[required]').forEach(function(i){var er=i.parentNode.querySelector('.err');var miss=!i.value.trim();er.style.display=miss?'block':'none';if(miss)bad=true});
-if(bad)return;f.style.display='none';document.querySelector('.tabs').style.display='none';document.getElementById('ok').classList.add('show')});
+if(bad)return;var btn=f.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='Sending…';
+fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(new FormData(f)).toString()}).then(function(r){if(!r.ok)throw 0;f.style.display='none';document.querySelector('.tabs').style.display='none';document.getElementById('ok').classList.add('show')}).catch(function(){btn.disabled=false;btn.textContent='Request booking';alert('We couldn’t send your request. Please call 412-953-1428.')})});
+var md=document.getElementById('md'),pw=document.getElementById('pw'),out=document.getElementById('out'),pm=document.getElementById('pm');
+document.getElementById('adm').onclick=function(){md.style.display='flex';pw.focus()};
+document.getElementById('x').onclick=function(){md.style.display='none';pw.value='';out.textContent='';pm.textContent=''};
+function load(){pm.textContent='Checking…';fetch('/.netlify/functions/bookings',{method:'POST',body:JSON.stringify({password:pw.value})}).then(function(r){if(r.status===401){pm.textContent='Wrong password.';throw 0}if(!r.ok){pm.textContent='Couldn’t load bookings. The setup isn’t finished.';throw 0}return r.json()}).then(function(l){pm.textContent=l.length?l.length+(l.length>1?' bookings':' booking'):'No bookings yet.';out.textContent='';l.forEach(function(b){var d=document.createElement('div');d.className='bk';[(b.name||'')+' · '+(b.phone||''),b.address,(b['booking-type']||'')+': '+(b.service||'')+(b.date?' on '+b.date:'')+(b.visits&&b['booking-type']==='Seasonal plan'?' ('+b.visits+')':''),b.notes,b.at?new Date(b.at).toLocaleString():''].forEach(function(t,i){if(!t)return;var e=document.createElement(i?'div':'b');e.textContent=t;d.appendChild(e)});out.appendChild(d)})}).catch(function(){})}
+document.getElementById('go').onclick=load;pw.addEventListener('keydown',function(e){if(e.key==='Enter')load()});
 })();
 </script>
 </body>
